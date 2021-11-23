@@ -1,0 +1,8 @@
+[Unit]
+Description=Run meld for urbit %i
+ConditionPathIsDirectory=/home/%i/%i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/meld-cron %i
+User=root
