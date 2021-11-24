@@ -2,7 +2,9 @@
 Description=Run urbit-meld@%i weekly
 
 [Timer]
-OnCalendar=Mon *-*-* 07:30:00
+OnCalendar=Mon *-*-* 07:00:00
+RandomizedDelaySec=3600
+FixedRandomDelay=true
 
 [Install]
 WantedBy=timers.target
