@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eux
+SHIP=$1; shift
+
+adduser --disabled-password --gecos "" $SHIP
+echo "Beginning interactive session; set up pier $SHIP"
+sudo su - $SHIP
+read PORT
+mkdir -p /etc/urbit
+echo "-p $PORT" > /etc/urbit/$SHIP.args
+ufw allow $PORT/udp
+systemctl enable --now urbit@$SHIP
+systemctl enable --now urbit-meld@$SHIP.timer
