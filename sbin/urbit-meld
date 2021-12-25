@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eux
 SHIP=$1; shift
-systemctl disable --now urbit@"$SHIP" &&
-  { trap 'systemctl enable --now urbit@'"$SHIP" EXIT
+systemctl stop urbit@"$SHIP" &&
+  { trap 'systemctl start urbit@'"$SHIP" EXIT
     sudo -u "$SHIP" /usr/local/bin/urbit-worker meld "/home/$SHIP/$SHIP"
   }

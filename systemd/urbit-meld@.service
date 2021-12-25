@@ -4,5 +4,5 @@ ConditionPathIsDirectory=/home/%i/%i
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/meld-cron %i
+ExecStart=/usr/local/sbin/urbit-meld %i
 User=root
