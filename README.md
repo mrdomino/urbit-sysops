@@ -26,6 +26,8 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:42069']
 […]
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
 $ cat /etc/prometheus/rules/alert-rules.yml
 […]
 groups:
