@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eux
+SHIP=$1; shift
+docker stop "$SHIP" && {
+  trap 'docker start '"$SHIP" EXIT
+  docker run --rm --volumes-from=$SHIP tloncorp/urbit /bin/urbit-worker meld $SHIP
+}
