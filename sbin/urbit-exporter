@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+import argparse
+import prometheus_client
+import time
+import urllib3
+import re
+
+UPDATE_PERIOD_SEC = 5
+URBIT_UP = prometheus_client.Gauge('urbit_up',
+                                   'Urbit login page loads')
+URBIT_US = prometheus_client.Gauge('urbit_us',
+                                   'Urbit ship is as expected')
+
+def main():
+    http = urllib3.PoolManager()
+    pp = argparse.ArgumentParser(description='Urbit process eporter.')
+    pp.add_argument('port', metavar='PORT', type=int,
+                    help='Port to start exporter server on.')
+    pp.add_argument('urbit_ship', metavar='SHIP', type=str,
+                    help='Urbit ship name.')
+    pp.add_argument('urbit_port', metavar='URBIT_PORT', type=int,
+                    help='Urbit instance http port to query.')
+    args = pp.parse_args()
+
+    prometheus_client.start_http_server(args.port)
+    ship_re = re.compile(re.escape(b'~' + bytes(args.urbit_ship, encoding='ascii')))
+    while True:
+        try:
+            resp = http.request(
+                'GET',
+                'http://localhost:{port}/~/login'.format(port=args.urbit_port),
+                redirect=False,
+                retries=False)
+            URBIT_UP.set(200 == resp.status)
+            URBIT_US.set(1 if ship_re.search(resp.data) else 0)
+        except:
+            URBIT_UP.set(0)
+            URBIT_US.set(0)
+        time.sleep(UPDATE_PERIOD_SEC)
+
+if __name__ == '__main__':
+    main()
