@@ -1,0 +1,11 @@
+[Unit]
+Description=Urbit prometheus exporter for %i
+
+[Service]
+EnvironmentFile=/etc/urbit/%i.exporter
+ExecStart=/usr/local/sbin/urbit-exporter ${PORT} ${SHIP} ${URBIT_PORT}
+Type=exec
+User=urbit-exporter
+
+[Install]
+WantedBy=multi-user.target
