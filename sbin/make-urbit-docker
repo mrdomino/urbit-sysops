@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eux
+SHIP=$1; shift
+HTTP=$1; shift
+AMES=$1; shift
+docker stop $SHIP || true
+docker rm $SHIP || true
+ufw allow $AMES/udp
+docker run --restart=always -d -p 127.0.0.1:$HTTP:80 -p $AMES:$AMES/udp --name $SHIP \
+  --mount type=volume,source=$SHIP,destination=/urbit tloncorp/urbit \
+  /bin/start-urbit --port=$AMES
+cat > /etc/urbit/$SHIP.exporter <<EOF
+PORT=$AMES
+SHIP=$SHIP
+URBIT_PORT=$HTTP
+EOF
+( cat /etc/urbit/ships
+  echo $SHIP
+) | sort | uniq > /etc/urbit/ships-new &&
+  mv /etc/urbit/ships-new /etc/urbit/ships

@@ -5,6 +5,7 @@ main() {
   sudo install -m 0755 -o root -g root sbin/urbit-meld /usr/local/sbin
   sudo install -m 0755 -o root -g root sbin/urbit-meld-docker /usr/local/sbin
   sudo install -m 0755 -o root -g root sbin/make-urbit /usr/local/sbin
+  sudo install -m 0755 -o root -g root sbin/make-urbit-docker /usr/local/sbin
   sudo install -m 0755 -o root -g root sbin/urbit-exporter /usr/local/sbin
   sudo install -m 0644 -o root -g root systemd/urbit@.service /etc/systemd/system
   sudo install -m 0644 -o root -g root systemd/urbit-exporter@.service /etc/systemd/system
