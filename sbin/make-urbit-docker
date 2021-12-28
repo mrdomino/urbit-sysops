@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eux
-SHIP=$1; shift
-HTTP=$1; shift
-AMES=$1; shift
+SHIP=$1
+HTTP=$2
+AMES=$3
 docker stop $SHIP || true
 docker rm $SHIP || true
 ufw allow $AMES/udp
