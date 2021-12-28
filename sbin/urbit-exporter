@@ -7,13 +7,15 @@ import urllib3
 import re
 
 UPDATE_PERIOD_SEC = 5
+FE_URL_BASE = 'arvo.network'
 URBIT_UP = prometheus_client.Gauge('urbit_up',
                                    'Urbit login page loads')
 URBIT_US = prometheus_client.Gauge('urbit_us',
                                    'Urbit ship is as expected')
+URBIT_FE = prometheus_client.Gauge('urbit_fe',
+                                   'Urbit reachable from frontend')
 
 def main():
-    http = urllib3.PoolManager()
     pp = argparse.ArgumentParser(description='Urbit process eporter.')
     pp.add_argument('port', metavar='PORT', type=int,
                     help='Port to start exporter server on.')
@@ -23,6 +25,7 @@ def main():
                     help='Urbit instance http port to query.')
     args = pp.parse_args()
 
+    http = urllib3.PoolManager()
     prometheus_client.start_http_server(args.port)
     ship_re = re.compile(re.escape(b'~' + bytes(args.urbit_ship, encoding='ascii')))
     while True:
@@ -37,6 +40,16 @@ def main():
         except:
             URBIT_UP.set(0)
             URBIT_US.set(0)
+        try:
+            resp = http.request(
+                'GET',
+                'https://{ship}.{fe_base}/~/login'.format(ship=args.urbit_ship,
+                                                          fe_base=FE_URL_BASE),
+                redirect=False,
+                retries=False)
+            URBIT_FE.set(1 if ship_re.search(resp.data) else 0)
+        except:
+            URBIT_FE.set(0)
         time.sleep(UPDATE_PERIOD_SEC)
 
 if __name__ == '__main__':
