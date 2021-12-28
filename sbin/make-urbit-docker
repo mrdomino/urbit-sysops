@@ -21,6 +21,7 @@ EOF
   echo $SHIP
 ) | sort | uniq > /etc/urbit/ships-new &&
   mv /etc/urbit/ships-new /etc/urbit/ships
+systemctl enable --now urbit-exporter@$SHIP
 # XX you may want to run something like this:
 #
 #cat >> /etc/caddy/Caddyfile <<EOF
