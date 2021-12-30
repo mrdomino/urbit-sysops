@@ -17,6 +17,10 @@ main() {
                --disabled-password --no-create-home urbit-exporter
   # try to install packages in case we're on debian
   sudo apt install -yy python3-prometheus-client python3-urllib3 || true
+
+  # optionally install prometheus
+  read ctrl_c_to_not_install_prometheus
+  sudo apt install -yy prometheus prometheus-alertmanager prometheus-node-exporter
 }
 
 declare -f main
