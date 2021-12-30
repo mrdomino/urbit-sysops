@@ -6,9 +6,14 @@ AMES=$3
 docker stop $SHIP || true
 docker rm $SHIP || true
 ufw allow $AMES/udp
-# XX prior to this, run:
-#   docker volume create $SHIP
-# and follow the instructions from https://hub.docker.com/r/tloncorp/urbit
+
+cat <<EOF
+Prior to this, you should run:
+    docker volume create $SHIP
+and follow the instructions from <https://hub.docker.com/r/tloncorp/urbit>
+to populate it.
+EOF
+
 docker run --restart=always -d -p 127.0.0.1:$HTTP:80 -p $AMES:$AMES/udp --name $SHIP \
   --mount type=volume,source=$SHIP,destination=/urbit tloncorp/urbit \
   /bin/start-urbit --port=$AMES
@@ -22,11 +27,13 @@ EOF
 ) | sort | uniq > /etc/urbit/ships-new &&
   mv /etc/urbit/ships-new /etc/urbit/ships
 systemctl enable --now urbit-exporter@$SHIP
-# XX you may want to run something like this:
-#
-#cat >> /etc/caddy/Caddyfile <<EOF
-#
-#$SHIP.mydomain {
-#    reverse_proxy localhost:$HTTP
-#}
-#EOF
+cat <<_EOF
+you may want to run something like this:
+
+cat >> /etc/caddy/Caddyfile <<EOF
+
+$SHIP.mydomain {
+    reverse_proxy localhost:$HTTP
+}
+EOF
+_EOF
