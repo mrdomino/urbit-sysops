@@ -30,7 +30,7 @@ systemctl enable --now urbit-exporter@$SHIP
 cat <<_EOF
 you may want to run something like this:
 
-cat >> /etc/caddy/Caddyfile <<EOF
+sudo tee -a /etc/caddy/Caddyfile <<EOF
 
 $SHIP.mydomain {
     reverse_proxy localhost:$HTTP
