@@ -15,8 +15,10 @@ main() {
   sudo mkdir -p /etc/urbit
   sudo adduser --system --shell /usr/sbin/nologin --gecos "" \
                --disabled-password --no-create-home urbit-exporter
+  # try to install packages in case we're on debian
+  sudo apt install -yy python3-prometheus-client python3-urllib3 || true
 }
 
-type main
+declare -f main
 read enter_to_continue
 main
