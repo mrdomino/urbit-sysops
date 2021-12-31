@@ -110,7 +110,10 @@ def main():
 
     prometheus_client.start_http_server(args.port)
     while True:
-        urbit_port = get_port()
+        try:
+            urbit_port = get_port()
+        except FileNotFoundError:
+            URBIT_UP.set(0)
         if urbit_port is not None:
             up_checks = [(URBIT_UP, lambda r: 200 == r.status)]
             if args.ship:
