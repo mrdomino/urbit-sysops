@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eux
+set -eu
 
 main() {
   sudo install -m 0755 -o root -g root sbin/urbit-meld /usr/local/sbin
@@ -23,6 +23,10 @@ main() {
   sudo apt install -yy prometheus prometheus-alertmanager prometheus-node-exporter
 }
 
-declare -f main
+echo "Here's what we're going to do:"
+echo
+cat $0 | sed -e '1,/main/d' | sed -e '/^}/,$d'
+echo
+set -x
 read enter_to_continue
 main
