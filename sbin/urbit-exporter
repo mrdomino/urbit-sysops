@@ -6,55 +6,123 @@
 #
 
 import argparse
+import inspect
+import os.path
 import prometheus_client
+import re
+import sys
 import time
 import urllib3
-import re
 
 UPDATE_PERIOD_SEC = 5
-FE_URL_BASE = 'arvo.network'
-URBIT_UP = prometheus_client.Gauge('urbit_up',
-                                   'Urbit login page loads')
-URBIT_US = prometheus_client.Gauge('urbit_us',
-                                   'Urbit ship is as expected')
-URBIT_FE = prometheus_client.Gauge('urbit_fe',
-                                   'Urbit reachable from frontend')
 
 def main():
-    pp = argparse.ArgumentParser(description='Urbit process eporter.')
-    pp.add_argument('port', metavar='PORT', type=int,
-                    help='Port to start exporter server on.')
-    pp.add_argument('urbit_ship', metavar='SHIP', type=str,
-                    help='Urbit ship name.')
-    pp.add_argument('urbit_port', metavar='URBIT_PORT', type=int,
-                    help='Urbit instance http port to query.')
-    args = pp.parse_args()
+    """
+    Prometheus exporter for an Urbit process.
 
+    Takes a port to bind, and either an Urbit HTTP port to query or
+    an Urbit pier directory. In the latter case, it reads the Urbit
+    instance's HTTP port out of the pier's .http.ports file.
+
+    The bound port is the port to pass when configuring the prometheus
+    instance, e.g.:
+
+        urbit-exporter 12345 sampel-palnet --http 8080
+
+    would correspond to a prometheus.yml entry like:
+
+        - job_name: urbit
+          static_configs:
+            - targets: ['localhost:12345']
+
+    The following metrics are exported:
+
+    * urbit_up: 1 iff the ship seems to be up; measured by presence of
+      .http.ports if applicable, and/or by 200 response from the login
+      page.
+
+    * urbit_us: 1 iff the ship name appears on the login page. Only
+      exported if the ship name is passed.
+
+    * urbit_fe: 1 iff the ship name appears on the login page from the
+      passed frontend URL base. Only exported if --fe and ship name are
+      passed.
+    """
+
+    pp = argparse.ArgumentParser(
+        description=inspect.cleandoc(main.__doc__),
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    pp.add_argument('port', type=int,
+                    help='Port to start exporter server on.')
+    pp.add_argument('ship', type=str, nargs='?',
+                    help='Urbit ship name.')
+    pp.add_argument('--fe', type=str,
+                    help='Frontend URL base (e.g. "https://ship.my.net".)')
+    pq = pp.add_mutually_exclusive_group()
+    pq.add_argument('--http', type=int,
+                    help='Urbit instance http port to query.')
+    pq.add_argument('--pier', type=str,
+                    help='Urbit pier directory to read http port from.')
+    args = pp.parse_args()
+    if not any((args.fe, args.http, args.pier)):
+        pp.error('One of --fe, --http, or --pier must be passed.')
+    if args.fe and not args.ship:
+        pp.error('--fe requires ship to be passed.')
+
+    URBIT_UP = prometheus_client.Gauge('urbit_up',
+                                       'Urbit login page loads')
+    if args.ship and (args.http or args.pier):
+        URBIT_US = prometheus_client.Gauge('urbit_us',
+                                           'Urbit ship is on login page')
+    if args.fe:
+        URBIT_FE = prometheus_client.Gauge('urbit_fe',
+                                           'Urbit ship is on frontend')
+
+    if args.ship:
+        ship_re = re.compile(re.escape(b'~' + bytes(args.ship,
+                                                    encoding='ascii')))
+
+    if args.pier:
+        ports_path = os.path.join(args.pier, '.http.ports')
+
+    def get_port():
+        ret = None
+        if args.pier:
+            with open(ports_path, 'r') as f:
+                for line in f.readlines():
+                    ret, _, typ = line.split(' ')
+                    if typ == 'public':
+                        break
+        return ret or args.http
+
+    urllib3.disable_warnings()
     http = urllib3.PoolManager()
+    def scrape_http(url_base, up_checks):
+        url = url_base + '/~/login'
+        try:
+            resp = http.request('GET', url, redirect=False, retries=False)
+            for gauge, check in up_checks:
+                gauge.set(1 if check(resp) else 0)
+        except urllib3.exceptions.HTTPError as e:
+            print('GET {}: {}'.format(url, e), file=sys.stderr)
+            for gauge, _ in up_checks:
+                gauge.set(0)
+
     prometheus_client.start_http_server(args.port)
-    ship_re = re.compile(re.escape(b'~' + bytes(args.urbit_ship, encoding='ascii')))
     while True:
-        try:
-            resp = http.request(
-                'GET',
-                'http://localhost:{port}/~/login'.format(port=args.urbit_port),
-                redirect=False,
-                retries=False)
-            URBIT_UP.set(200 == resp.status)
-            URBIT_US.set(1 if ship_re.search(resp.data) else 0)
-        except:
-            URBIT_UP.set(0)
-            URBIT_US.set(0)
-        try:
-            resp = http.request(
-                'GET',
-                'https://{ship}.{fe_base}/~/login'.format(ship=args.urbit_ship,
-                                                          fe_base=FE_URL_BASE),
-                redirect=False,
-                retries=False)
-            URBIT_FE.set(1 if ship_re.search(resp.data) else 0)
-        except:
-            URBIT_FE.set(0)
+        urbit_port = get_port()
+        if urbit_port is not None:
+            up_checks = [(URBIT_UP, lambda r: 200 == resp.status)]
+            if args.ship:
+                up_checks.append((URBIT_US, lambda r: ship_re.search(r.data)))
+            scrape_http('http://127.0.0.1:{}'.format(urbit_port), up_checks)
+        if args.fe:
+            up_checks = []
+            if args.ship:
+                up_checks.append((URBIT_FE, lambda r: ship_re.search(r.data)))
+            if urbit_port is None:          # get urbit_up from fe
+                up_checks.append((URBIT_UP, lambda r: 200 == r.status))
+            scrape_http(args.fe, up_checks)
         time.sleep(UPDATE_PERIOD_SEC)
 
 if __name__ == '__main__':

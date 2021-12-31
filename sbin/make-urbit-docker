@@ -20,7 +20,7 @@ docker run --restart=always -d -p 127.0.0.1:$HTTP:80 -p $AMES:$AMES/udp --name $
 cat > /etc/urbit/$SHIP.exporter <<EOF
 PORT=$AMES
 SHIP=$SHIP
-URBIT_PORT=$HTTP
+ARGS=--http=$HTTP
 EOF
 ( cat /etc/urbit/ships
   echo $SHIP

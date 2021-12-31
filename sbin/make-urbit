@@ -11,3 +11,9 @@ echo "-p $PORT" > /etc/urbit/$SHIP.args
 ufw allow $PORT/udp
 systemctl enable --now urbit@$SHIP
 systemctl enable --now urbit-meld@$SHIP.timer
+cat > /etc/urbit/$SHIP.exporter <<EOF
+PORT=$PORT
+SHIP=$SHIP
+ARGS=--pier=/home/$SHIP/$SHIP
+EOF
+systemctl enable --now urbit-exporter@$SHIP
