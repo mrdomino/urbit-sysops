@@ -3,7 +3,7 @@ Description=Urbit prometheus exporter for %i
 
 [Service]
 EnvironmentFile=/etc/urbit/%i.exporter
-ExecStart=/usr/local/sbin/urbit-exporter ${PORT} ${SHIP} ${ARGS}
+ExecStart=/usr/bin/bash -c "/usr/local/sbin/urbit-exporter ${PORT} ${SHIP} ${ARGS}"
 Type=exec
 User=urbit-exporter
 
