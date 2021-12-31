@@ -112,7 +112,7 @@ def main():
     while True:
         urbit_port = get_port()
         if urbit_port is not None:
-            up_checks = [(URBIT_UP, lambda r: 200 == resp.status)]
+            up_checks = [(URBIT_UP, lambda r: 200 == r.status)]
             if args.ship:
                 up_checks.append((URBIT_US, lambda r: ship_re.search(r.data)))
             scrape_http('http://127.0.0.1:{}'.format(urbit_port), up_checks)
