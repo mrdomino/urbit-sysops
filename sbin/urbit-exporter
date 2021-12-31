@@ -113,6 +113,7 @@ def main():
         try:
             urbit_port = get_port()
         except FileNotFoundError:
+            urbit_port = None
             URBIT_UP.set(0)
         if urbit_port is not None:
             up_checks = [(URBIT_UP, lambda r: 200 == r.status)]
