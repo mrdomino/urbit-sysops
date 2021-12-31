@@ -5,6 +5,7 @@ HTTP=$2
 AMES=$3
 docker stop $SHIP || true
 docker rm $SHIP || true
+systemctl disable --now urbit-exporter@$SHIP || true
 ufw allow $AMES/udp
 
 cat <<EOF
