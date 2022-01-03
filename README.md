@@ -18,7 +18,7 @@ For example, suppose you have `~sampel-palnet` listening on http port `8080/tcp`
 $ cat /etc/urbit/sampel-palnet.exporter
 PORT=42069
 SHIP=sampel-palnet
-URBIT_PORT=8080
+ARGS=--http=8080
 $ cat /etc/prometheus/prometheus.yml
 […]
 scrape_configs:
