@@ -74,9 +74,15 @@ def main():
     if args.ship and (args.http or args.pier):
         URBIT_US = prometheus_client.Gauge('urbit_us',
                                            'Urbit ship is on login page')
+    else:
+        URBIT_NO_US = prometheus_client.Gauge('urbit_no_us', 'no urbit_us')
+        URBIT_NO_US.set(1)
     if args.fe:
         URBIT_FE = prometheus_client.Gauge('urbit_fe',
                                            'Urbit ship is on frontend')
+    else:
+        URBIT_NO_FE = prometheus_client.Gauge('urbit_no_fe', 'no urbit_fe')
+        URBIT_NO_FE.set(1)
 
     if args.ship:
         ship_re = re.compile(re.escape(b'~' + bytes(args.ship,
