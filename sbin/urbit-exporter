@@ -64,8 +64,6 @@ def main():
     args = pp.parse_args()
     if not any((args.fe, args.http, args.pier)):
         pp.error('One of --fe, --http, or --pier must be passed.')
-    if args.fe and not args.ship:
-        pp.error('--fe requires ship to be passed.')
 
     URBIT_UP = prometheus_client.Gauge('urbit_up',
                                        'Urbit login page loads',
