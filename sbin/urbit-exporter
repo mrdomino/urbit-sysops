@@ -52,10 +52,8 @@ def main():
     pp = argparse.ArgumentParser(
         description=inspect.cleandoc(main.__doc__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    pp.add_argument('port', type=int,
-                    help='Port to start exporter server on.')
-    pp.add_argument('ship', type=str, nargs='?',
-                    help='Urbit ship name.')
+    pp.add_argument('port', type=int, help='Port to start exporter server on.')
+    pp.add_argument('ship', type=str, help='Urbit ship name.')
     pp.add_argument('--fe', type=str,
                     help='Frontend URL base (e.g. "https://ship.my.net".)')
     pq = pp.add_mutually_exclusive_group()
@@ -70,23 +68,26 @@ def main():
         pp.error('--fe requires ship to be passed.')
 
     URBIT_UP = prometheus_client.Gauge('urbit_up',
-                                       'Urbit login page loads')
-    if args.ship and (args.http or args.pier):
+                                       'Urbit login page loads',
+                                       ['ship'])
+    if args.http or args.pier:
         URBIT_US = prometheus_client.Gauge('urbit_us',
-                                           'Urbit ship is on login page')
+                                           'Urbit ship is on login page',
+                                           ['ship'])
     else:
-        URBIT_NO_US = prometheus_client.Gauge('urbit_no_us', 'no urbit_us')
-        URBIT_NO_US.set(1)
+        URBIT_NO_US = prometheus_client.Gauge('urbit_no_us', 'no urbit_us',
+                                              ['ship'])
+        URBIT_NO_US.labels(ship=args.ship).set(1)
     if args.fe:
         URBIT_FE = prometheus_client.Gauge('urbit_fe',
-                                           'Urbit ship is on frontend')
+                                           'Urbit ship is on frontend',
+                                           ['ship'])
     else:
-        URBIT_NO_FE = prometheus_client.Gauge('urbit_no_fe', 'no urbit_fe')
-        URBIT_NO_FE.set(1)
+        URBIT_NO_FE = prometheus_client.Gauge('urbit_no_fe', 'no urbit_fe',
+                                              ['ship'])
+        URBIT_NO_FE.labels(ship=args.ship).set(1)
 
-    if args.ship:
-        ship_re = re.compile(re.escape(b'~' + bytes(args.ship,
-                                                    encoding='ascii')))
+    ship_re = re.compile(re.escape(b'~' + bytes(args.ship, encoding='ascii')))
 
     if args.pier:
         ports_path = os.path.join(args.pier, '.http.ports')
@@ -108,11 +109,11 @@ def main():
         try:
             resp = http.request('GET', url, redirect=False, retries=False)
             for gauge, check in up_checks:
-                gauge.set(1 if check(resp) else 0)
+                gauge.labels(ship=args.ship).set(1 if check(resp) else 0)
         except urllib3.exceptions.HTTPError as e:
             print('GET {}: {}'.format(url, e), file=sys.stderr)
             for gauge, _ in up_checks:
-                gauge.set(0)
+                gauge.labels(ship=args.ship).set(0)
 
     prometheus_client.start_http_server(args.port)
     while True:
@@ -120,16 +121,15 @@ def main():
             urbit_port = get_port()
         except FileNotFoundError:
             urbit_port = None
-            URBIT_UP.set(0)
+            URBIT_UP.labels(ship=args.ship).set(0)
         if urbit_port is not None:
-            up_checks = [(URBIT_UP, lambda r: 200 == r.status)]
-            if args.ship:
-                up_checks.append((URBIT_US, lambda r: ship_re.search(r.data)))
+            up_checks = [
+                (URBIT_UP, lambda r: 200 == r.status),
+                (URBIT_US, lambda r: ship_re.search(r.data))
+            ]
             scrape_http('http://127.0.0.1:{}'.format(urbit_port), up_checks)
         if args.fe:
-            up_checks = []
-            if args.ship:
-                up_checks.append((URBIT_FE, lambda r: ship_re.search(r.data)))
+            up_checks = [(URBIT_FE, lambda r: ship_re.search(r.data))]
             if urbit_port is None:          # get urbit_up from fe
                 up_checks.append((URBIT_UP, lambda r: 200 == r.status))
             scrape_http(args.fe, up_checks)
