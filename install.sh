@@ -2,6 +2,7 @@
 set -eu
 
 main() {
+  sudo install -m 0755 -o root -g root bin/urbit-fg /usr/local/bin
   sudo install -m 0755 -o root -g root sbin/urbit-meld /usr/local/sbin
   sudo install -m 0755 -o root -g root sbin/urbit-meld-docker /usr/local/sbin
   sudo install -m 0755 -o root -g root sbin/urbit-meld-docker-all /usr/local/sbin
