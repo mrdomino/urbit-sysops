@@ -2,8 +2,6 @@
 
 Contains some helpful scripts for hosting Urbit.
 
-These scripts are in use in production, but this repository is not currently used to provision production hosts; as such the install process is untested, and may contain some gotchas.
-
 There are two variants included in this repo: one using docker, and one using plain systemd.
 
 The docker approach requires a working docker install, but has the advantage of making it possible to assign predictable HTTP ports per urbit instance; as such it is preferred unless you’re hosting ships that do not require HTTP access, or hosting one ship per VPS.
