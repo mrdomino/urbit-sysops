@@ -1,19 +1,28 @@
 #!/bin/sh
-set -eux
+set -eu
+trap "sed -e '1,3d' -e '/^###/,\$d' $0" EXIT
 SHIP=$1
 HTTP=$2
 AMES=$3
-docker stop $SHIP || true
-docker rm $SHIP || true
-systemctl disable --now urbit-exporter@$SHIP || true
-ufw allow $AMES/udp
+###
 
+trap - EXIT
+set -x
+
+{ docker volume ls -qf "name=$SHIP" | grep -- "$SHIP" >/dev/null ;} || {
 cat <<EOF
 Prior to this, you should run:
     docker volume create $SHIP
 and follow the instructions from <https://hub.docker.com/r/tloncorp/urbit>
 to populate it.
 EOF
+exit 1
+}
+
+docker stop $SHIP || true
+docker rm $SHIP || true
+systemctl disable --now urbit-exporter@$SHIP || true
+ufw allow $AMES/udp comment "urbit/$SHIP"
 
 docker run --restart=always -d -p 127.0.0.1:$HTTP:80 -p $AMES:$AMES/udp --name $SHIP \
   --mount type=volume,source=$SHIP,destination=/urbit tloncorp/urbit \
