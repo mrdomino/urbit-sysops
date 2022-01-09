@@ -3,4 +3,6 @@ set -eux
 
 for ship in $(cat /etc/urbit/ships); do
   urbit-meld-docker "$ship"
+  # wait a cycle for prometheus to scrape
+  sleep 15
 done
