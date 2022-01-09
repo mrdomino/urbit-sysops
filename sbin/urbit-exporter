@@ -41,12 +41,10 @@ def main():
       .http.ports if applicable, and/or by 200 response from the login
       page.
 
-    * urbit_us: 1 iff the ship name appears on the login page. Only
-      exported if the ship name is passed.
+    * urbit_us: 1 iff the ship name appears on the login page.
 
     * urbit_fe: 1 iff the ship name appears on the login page from the
-      passed frontend URL base. Only exported if --fe and ship name are
-      passed.
+      passed frontend URL base. Only exported if --fe is passed.
     """
 
     pp = argparse.ArgumentParser(
