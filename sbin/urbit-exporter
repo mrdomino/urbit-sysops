@@ -6,6 +6,7 @@
 #
 
 import argparse
+import datetime
 import inspect
 import os.path
 import prometheus_client
@@ -66,6 +67,9 @@ def main():
     URBIT_UP = prometheus_client.Gauge('urbit_up',
                                        'Urbit login page loads',
                                        ['ship'])
+    URBIT_RTT = prometheus_client.Counter('urbit_scrape_latency_seconds',
+                                          'Elapsed scrape latency',
+                                          ['ship', 'src'])
     if args.http or args.pier:
         URBIT_US = prometheus_client.Gauge('urbit_us',
                                            'Urbit ship is on login page',
@@ -99,11 +103,17 @@ def main():
         return ret or args.http
 
     urllib3.disable_warnings()
-    http = urllib3.PoolManager()
-    def scrape_http(url_base, up_checks):
+    timeout = urllib3.util.Timeout(total=2.0)
+    http = urllib3.PoolManager(timeout=timeout)
+    def scrape_http(url_base, src, up_checks):
         url = url_base + '/~/login'
         try:
+            start = datetime.datetime.now()
             resp = http.request('GET', url, redirect=False, retries=False)
+            end = datetime.datetime.now()
+            delta = end - start
+            URBIT_RTT.labels(src=src, ship=args.ship).inc(
+                delta.microseconds * .000001)
             for gauge, check in up_checks:
                 gauge.labels(ship=args.ship).set(1 if check(resp) else 0)
         except urllib3.exceptions.HTTPError as e:
@@ -123,12 +133,13 @@ def main():
                 (URBIT_UP, lambda r: 200 == r.status),
                 (URBIT_US, lambda r: ship_re.search(r.data))
             ]
-            scrape_http('http://127.0.0.1:{}'.format(urbit_port), up_checks)
+            scrape_http('http://127.0.0.1:{}'.format(urbit_port), 'lo',
+                        up_checks)
         if args.fe:
             up_checks = [(URBIT_FE, lambda r: ship_re.search(r.data))]
             if urbit_port is None:          # get urbit_up from fe
                 up_checks.append((URBIT_UP, lambda r: 200 == r.status))
-            scrape_http(args.fe, up_checks)
+            scrape_http(args.fe, 'fe', up_checks)
         time.sleep(UPDATE_PERIOD_SEC)
 
 if __name__ == '__main__':
