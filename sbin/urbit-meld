@@ -9,6 +9,7 @@ systemctl stop urbit@"$SHIP" &&
       [ -d "$PIER/.urb/bhk" ] &&
       rm -rf "$PIER/.urb/dhk"
     } ||
-      [ ! -d "$PIER/.urb/bhk" ] &&
-      mv "$PIER/.urb/dhk" "$PIER/.urb/bhk"
+      { [ ! -d "$PIER/.urb/bhk" ] &&
+        mv "$PIER/.urb/dhk" "$PIER/.urb/bhk"
+      }
   }
