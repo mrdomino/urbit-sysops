@@ -1,7 +1,14 @@
 #!/bin/sh
 set -eux
 SHIP=$1; shift
+PIER="/home/$SHIP/$SHIP"
 systemctl stop urbit@"$SHIP" &&
   { trap 'systemctl start urbit@'"$SHIP" EXIT
-    sudo -u "$SHIP" /usr/local/bin/urbit-worker meld "/home/$SHIP/$SHIP"
+    mv "$PIER/.urb/bhk" "$PIER/.urb/dhk"
+    { sudo -u "$SHIP" /usr/local/bin/urbit-worker meld "$PIER" &&
+      [ -d "$PIER/.urb/bhk" ] &&
+      rm -rf "$PIER/.urb/dhk"
+    } ||
+      [ ! -d "$PIER/.urb/bhk" ] &&
+      mv "$PIER/.urb/dhk" "$PIER/.urb/bhk"
   }
