@@ -9,10 +9,10 @@ import argparse
 import datetime
 import inspect
 import os.path
-import prometheus_client
 import re
 import sys
 import time
+import prometheus_client
 import urllib3
 
 UPDATE_PERIOD_SEC = 5
@@ -47,7 +47,6 @@ def main():
     * urbit_fe: 1 iff the ship name appears on the login page from the
       passed frontend URL base. Only exported if --fe is passed.
     """
-
     pp = argparse.ArgumentParser(
         description=inspect.cleandoc(main.__doc__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -64,34 +63,29 @@ def main():
     if not any((args.fe, args.http, args.pier)):
         pp.error('One of --fe, --http, or --pier must be passed.')
 
-    URBIT_UP = prometheus_client.Gauge('urbit_up',
-                                       'Urbit login page loads',
-                                       ['ship'])
-    URBIT_RTT = prometheus_client.Counter('urbit_scrape_latency_seconds',
-                                          'Elapsed scrape latency',
-                                          ['ship', 'src'])
+    URBIT_UP = prometheus_client.Gauge(
+        'urbit_up', 'Urbit login page loads', ['ship'])
+    URBIT_RTT = prometheus_client.Counter(
+        'urbit_scrape_latency_seconds', 'Elapsed scrape latency',
+        ['ship', 'src'])
     if args.http or args.pier:
-        URBIT_US = prometheus_client.Gauge('urbit_us',
-                                           'Urbit ship is on login page',
-                                           ['ship'])
+        URBIT_US = prometheus_client.Gauge(
+            'urbit_us', 'Urbit ship is on login page', ['ship'])
     else:
-        URBIT_NO_US = prometheus_client.Gauge('urbit_no_us', 'no urbit_us',
-                                              ['ship'])
+        URBIT_NO_US = prometheus_client.Gauge(
+            'urbit_no_us', 'no urbit_us', ['ship'])
         URBIT_NO_US.labels(ship=args.ship).set(1)
     if args.fe:
-        URBIT_FE = prometheus_client.Gauge('urbit_fe',
-                                           'Urbit ship is on frontend',
-                                           ['ship'])
+        URBIT_FE = prometheus_client.Gauge(
+            'urbit_fe', 'Urbit ship is on frontend', ['ship'])
     else:
-        URBIT_NO_FE = prometheus_client.Gauge('urbit_no_fe', 'no urbit_fe',
-                                              ['ship'])
+        URBIT_NO_FE = prometheus_client.Gauge(
+            'urbit_no_fe', 'no urbit_fe', ['ship'])
         URBIT_NO_FE.labels(ship=args.ship).set(1)
 
     ship_re = re.compile(re.escape(b'~' + bytes(args.ship, encoding='ascii')))
-
     if args.pier:
         ports_path = os.path.join(args.pier, '.http.ports')
-
     def get_port():
         ret = None
         if args.pier:
@@ -117,7 +111,7 @@ def main():
             for gauge, check in up_checks:
                 gauge.labels(ship=args.ship).set(1 if check(resp) else 0)
         except urllib3.exceptions.HTTPError as e:
-            print('GET {}: {}'.format(url, e), file=sys.stderr)
+            print(f'GET {url}: {e}', file=sys.stderr)
             for gauge, _ in up_checks:
                 gauge.labels(ship=args.ship).set(0)
 
@@ -133,8 +127,7 @@ def main():
                 (URBIT_UP, lambda r: 200 == r.status),
                 (URBIT_US, lambda r: ship_re.search(r.data))
             ]
-            scrape_http('http://127.0.0.1:{}'.format(urbit_port), 'lo',
-                        up_checks)
+            scrape_http(f'http://127.0.0.1:{urbit_port}', 'lo', up_checks)
         if args.fe:
             up_checks = [(URBIT_FE, lambda r: ship_re.search(r.data))]
             if urbit_port is None:          # get urbit_up from fe
