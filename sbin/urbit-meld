@@ -4,12 +4,12 @@ SHIP=$1; shift
 PIER="/home/$SHIP/$SHIP"
 systemctl stop urbit@"$SHIP" &&
   { trap 'systemctl start urbit@'"$SHIP" EXIT
-    mv "$PIER/.urb/bhk" "$PIER/.urb/dhk"
-    { sudo -u "$SHIP" /usr/local/bin/urbit-worker meld "$PIER" &&
+    mv "$PIER/.urb/bhk" "$PIER/.urb/ahk"
+    { sudo -u "$SHIP" "$PIER/.run" meld "$PIER" &&
       [ -d "$PIER/.urb/bhk" ] &&
-      rm -rf "$PIER/.urb/dhk"
+      rm -rf "$PIER/.urb/ahk"
     } ||
       { [ ! -d "$PIER/.urb/bhk" ] &&
-        mv "$PIER/.urb/dhk" "$PIER/.urb/bhk"
+        mv "$PIER/.urb/ahk" "$PIER/.urb/bhk"
       }
   }

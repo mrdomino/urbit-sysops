@@ -2,5 +2,5 @@
 set -eux
 SHIP=$1
 sudo systemctl stop urbit@$SHIP &&
-  sudo -u $SHIP /usr/local/bin/urbit $(cat /etc/urbit/$SHIP.args) /home/$SHIP/$SHIP &&
+  sudo -u $SHIP /home/$SHIP/$SHIP/.run $(cat /etc/urbit/$SHIP.args) &&
   sudo systemctl start urbit@$SHIP
