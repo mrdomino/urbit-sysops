@@ -5,7 +5,7 @@ PIER="/home/$SHIP/$SHIP"
 systemctl stop urbit@"$SHIP" &&
   { trap 'systemctl start urbit@'"$SHIP" EXIT
     mv "$PIER/.urb/bhk" "$PIER/.urb/ahk"
-    { sudo -u "$SHIP" "$PIER/.run" meld "$PIER" &&
+    { sudo -u "$SHIP" "$PIER/.run" meld &&
       [ -d "$PIER/.urb/bhk" ] &&
       rm -rf "$PIER/.urb/ahk"
     } ||
