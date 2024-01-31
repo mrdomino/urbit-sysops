@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eux
 SHIP=$1; shift
-sudo systemctl stop urbit@$SHIP &&
-  sudo -u $SHIP /home/$SHIP/$SHIP/.run $(cat /etc/urbit/$SHIP.args) "$@" &&
-  sudo systemctl start urbit@$SHIP
+sudo systemctl stop "urbit@$SHIP"
+sudo -u "$SHIP" "/home/$SHIP/$SHIP/.run" $(cat "/etc/urbit/$SHIP.args") "$@"
+sudo systemctl start "urbit@$SHIP"
