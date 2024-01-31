@@ -2,14 +2,33 @@
 set -eux
 SHIP=$1; shift
 PIER="/home/$SHIP/$SHIP"
-systemctl stop urbit@"$SHIP" &&
-  { trap 'systemctl start urbit@'"$SHIP" EXIT
-    mv "$PIER/.urb/bhk" "$PIER/.urb/ahk"
-    { sudo -u "$SHIP" "$PIER/.run" meld &&
-      [ -d "$PIER/.urb/bhk" ] &&
-      rm -rf "$PIER/.urb/ahk"
-    } ||
-      { [ ! -d "$PIER/.urb/bhk" ] &&
-        mv "$PIER/.urb/ahk" "$PIER/.urb/bhk"
-      }
+
+if [ 0 -ne "$(id -u)" ]; then
+  echo must run as root >&2
+  exit 1
+fi
+
+if systemctl is-active --quiet "urbit@$SHIP"; then
+  cleanup() {
+    systemctl start "urbit@$SHIP"
   }
+  systemctl stop "urbit@$SHIP"
+  trap cleanup EXIT
+fi
+
+sudo -u "$SHIP" /usr/bin/env "PIER=$PIER" /bin/sh -eux <<'EOF'
+cleanup() {
+  if [ -d "$PIER/.urb/bhk" ]; then
+    rm -rf "$PIER/.urb/ahk"
+  elif [ -d "$PIER/.urb/ahk" ]; then
+    mv "$PIER/.urb/ahk" "$PIER/.urb/bhk"
+  else
+    cp --reflink=always "$PIER/.urb/chk" "$PIER/.urb/bhk"
+  fi
+}
+
+cleanup
+trap cleanup EXIT
+mv "$PIER/.urb/bhk" "$PIER/.urb/ahk"
+"$PIER/.run" meld
+EOF
