@@ -16,7 +16,7 @@ if systemctl is-active --quiet "urbit@$SHIP"; then
   trap cleanup EXIT
 fi
 
-sudo -u "$SHIP" /usr/bin/env "PIER=$PIER" /bin/sh -eux <<'EOF'
+sudo -u "$SHIP" "PIER=$PIER" /bin/sh -eux <<'EOF'
 cleanup() {
   if [ -d "$PIER/.urb/bhk" ]; then
     rm -rf "$PIER/.urb/ahk"
