@@ -3,7 +3,7 @@ Description=Urbit %i
 ConditionPathIsDirectory=/home/%i/%i
 
 [Service]
-ExecStart=/bin/sh -c 'exec /home/%i/%i/.run $(cat /etc/urbit/%i.args) -t'
+ExecStart=/bin/sh -c 'exec "/home/%i/%i/.run" $(cat "/etc/urbit/%i.args") -t'
 Type=exec
 User=%i
 
