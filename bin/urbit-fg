@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eux
 SHIP=$1; shift
-sudo systemctl stop "urbit@$SHIP"
+if systemctl is-active --quiet "urbit@$SHIP"; then
+  sudo systemctl stop "urbit@$SHIP"
+  cleanup() {
+    if [ 0 -eq "$?" ]; then
+      sudo systemctl start "urbit@$SHIP"
+    fi
+  }
+  trap cleanup EXIT
+fi
 sudo -u "$SHIP" "/home/$SHIP/$SHIP/.run" $(cat "/etc/urbit/$SHIP.args") "$@"
-sudo systemctl start "urbit@$SHIP"
