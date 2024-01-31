@@ -45,7 +45,7 @@ $ readlink /etc/systemd/system/multi-user.target.wants/urbit-exporter\@sampel-pa
 
 ## urbit-meld
 
-This is intended to be run as a cron job. It stops an urbit instance, runs `urbit-worker meld` on it, and restarts the instance after either success or failure.
+This is intended to be run as a cron job. It stops an urbit instance, runs `urbit meld` on it, and restarts the instance after either success or failure.
 
 `urbit-meld` is designed for a systemd-based setup; `urbit-meld-docker` is designed for a docker-based setup.
 
