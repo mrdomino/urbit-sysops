@@ -23,7 +23,7 @@ cleanup() {
   elif [ -d "$PIER/.urb/ahk" ]; then
     mv "$PIER/.urb/ahk" "$PIER/.urb/bhk"
   else
-    cp --reflink=auto "$PIER/.urb/chk" "$PIER/.urb/bhk"
+    cp -a --reflink=auto "$PIER/.urb/chk" "$PIER/.urb/bhk"
   fi
 }
 
