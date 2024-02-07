@@ -4,9 +4,11 @@ SHIP=$1; shift
 if systemctl is-active --quiet "urbit@$SHIP"; then
   sudo systemctl stop "urbit@$SHIP"
   cleanup() {
-    if [ 0 -eq "$?" ]; then
+    local exit_code=$?
+    if [ 0 -eq $exit_code ]; then
       sudo systemctl start "urbit@$SHIP"
     fi
+    return $exit_code
   }
   trap cleanup EXIT
 fi
