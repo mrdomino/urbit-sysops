@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eux
+SHIP=$1; shift
+PIER="/home/$SHIP/$SHIP"
+
+if [ 0 -ne "$(id -u)" ]; then
+  echo must run as root >&2
+  exit 1
+fi
+
+if systemctl is-active --quiet "urbit@$SHIP"; then
+  cleanup() {
+    systemctl start "urbit@$SHIP"
+  }
+  systemctl stop "urbit@$SHIP"
+  trap cleanup EXIT
+fi
+
+sudo -u "$SHIP" "$PIER/.run" pack

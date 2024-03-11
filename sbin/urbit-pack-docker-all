@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eux
+
+for ship in $(cat /etc/urbit/ships); do
+  urbit-pack-docker "$ship"
+  # wait a cycle for prometheus to scrape
+  sleep 15
+done

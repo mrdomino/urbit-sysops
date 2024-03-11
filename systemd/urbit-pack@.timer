@@ -1,0 +1,11 @@
+[Unit]
+Description=Run urbit-pack@%i weekly
+
+[Timer]
+OnCalendar=Tue *-*-* 07:00:00
+RandomizedDelaySec=10800
+FixedRandomDelay=true
+AccuracySec=1us
+
+[Install]
+WantedBy=timers.target
