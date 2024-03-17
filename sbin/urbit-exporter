@@ -9,7 +9,6 @@ import argparse
 import datetime
 import inspect
 import os.path
-import re
 import sys
 import time
 import prometheus_client
@@ -83,7 +82,7 @@ def main():
             'urbit_no_fe', 'no urbit_fe', ['ship'])
         URBIT_NO_FE.labels(ship=args.ship).set(1)
 
-    ship_re = re.compile(re.escape(b'~' + bytes(args.ship, encoding='ascii')))
+    ship = b'~' + bytes(args.ship, encoding='ascii')
     if args.pier:
         ports_path = os.path.join(args.pier, '.http.ports')
     def get_port():
@@ -125,11 +124,11 @@ def main():
         if urbit_port is not None:
             up_checks = [
                 (URBIT_UP, lambda r: 200 == r.status),
-                (URBIT_US, lambda r: ship_re.search(r.data))
+                (URBIT_US, lambda r: ship in r.data)
             ]
             scrape_http(f'http://127.0.0.1:{urbit_port}', 'lo', up_checks)
         if args.fe:
-            up_checks = [(URBIT_FE, lambda r: ship_re.search(r.data))]
+            up_checks = [(URBIT_FE, lambda r: ship in r.data)]
             if urbit_port is None:          # get urbit_up from fe
                 up_checks.append((URBIT_UP, lambda r: 200 == r.status))
             scrape_http(args.fe, 'fe', up_checks)
