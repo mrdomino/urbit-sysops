@@ -1,8 +1,8 @@
 [Unit]
-Description=Run urbit-meld@%i weekly
+Description=Run urbit-meld@%i monthly
 
 [Timer]
-OnCalendar=Mon *-*-* 07:00:00
+OnCalendar=Mon *-*-01..07 07:00:00
 RandomizedDelaySec=10800
 FixedRandomDelay=true
 AccuracySec=1us
